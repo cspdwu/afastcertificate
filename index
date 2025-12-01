@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบข้อมูลการออกเกียรติบัตร AI Toolkit</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .bg-animated {
+            background: linear-gradient(-45deg, #1e3a8a, #4c1d95, #312e81, #1e40af);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+    </style>
+</head>
+<body class="bg-animated min-h-screen flex items-center justify-center p-4">
+
+    <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-5 text-center text-white relative flex-shrink-0">
+            <div class="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform rotate-45 scale-150"></div>
+            <h1 class="text-xl font-bold relative z-10">ตรวจสอบสิทธิ์</h1>
+            <p class="text-indigo-100 text-xs mt-1 relative z-10">ระบบตรวจสอบข้อมูลการออกเกียรติบัตร AI Toolkit</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto custom-scrollbar flex-grow">
+
+            <!-- 1. Search Form -->
+            <div id="searchSection">
+                <div class="flex flex-col space-y-4">
+                    <!-- Toggle Buttons -->
+                    <div class="flex rounded-lg bg-gray-100 p-1">
+                        <button type="button" id="btnName" class="flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all">
+                            ค้นหาด้วยชื่อ
+                        </button>
+                        <button type="button" id="btnSurname" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all">
+                            ค้นหาด้วยนามสกุล
+                        </button>
+                    </div>
+
+                    <!-- Input -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="searchInput" 
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all" 
+                            placeholder="กรอกชื่อของคุณ (ไม่ต้องระบุคำนำหน้า)...">
+                    </div>
+
+                    <!-- Search Button -->
+                    <button type="button" id="btnSearch" 
+                        class="w-full py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02]">
+                        <i class="fas fa-paper-plane mr-2"></i> ค้นหาข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. List Section -->
+            <div id="listSection" class="hidden space-y-4 animate-fade-in-up">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-gray-700 font-bold">พบข้อมูล <span id="matchCount" class="text-indigo-600">0</span> รายการ</h3>
+                    <button type="button" id="btnBackToList" class="text-xs text-gray-500 hover:text-indigo-600 underline">กลับไปค้นหา</button>
+                </div>
+                <div id="listContainer" class="space-y-2"></div>
+            </div>
+
+            <!-- 3. Result Section -->
+            <div id="resultSection" class="hidden space-y-4 animate-fade-in-up">
+                <div class="text-center pb-4 border-b border-gray-200">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 mb-3">
+                        <i class="fas fa-user text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900" id="resultName"></h3>
+                    <p class="text-sm text-gray-500" id="resultEmail"></p>
+                </div>
+                <div id="statusContainer"></div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center py-3 bg-gray-50 text-xs text-gray-400 flex-shrink-0">
+            © 2024 AI Toolkit System. All rights reserved.
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // *** อย่าลืมเปลี่ยน URL ตรงนี้เป็น URL ของ Script คุณ ***
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2xc118WjgqAgc8oTr0oTOpL0kNpP4THGZAWQ00-hsi3XuJ3TeTCmvtumDIoL3838OFQ/exec'; 
+
+        let currentSearchType = 'name';
+        let currentUserData = null;
+        let searchResults = [];
+
+        // --- Event Listeners (โหลดเมื่อหน้าเว็บพร้อม) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ปุ่มเลือกประเภทการค้นหา
+            document.getElementById('btnName').addEventListener('click', () => setSearchType('name'));
+            document.getElementById('btnSurname').addEventListener('click', () => setSearchType('surname'));
+            
+            // ปุ่มค้นหา
+            document.getElementById('btnSearch').addEventListener('click', performSearch);
+            
+            // ปุ่มกลับ
+            document.getElementById('btnBackToList').addEventListener('click', resetUI);
+
+            // กด Enter ในช่องค้นหา
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') performSearch();
+            });
+        });
+
+        function setSearchType(type) {
+            currentSearchType = type;
+            const btnName = document.getElementById('btnName');
+            const btnSurname = document.getElementById('btnSurname');
+            const input = document.getElementById('searchInput');
+
+            // Class styles
+            const activeClass = "flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all border border-gray-200";
+            const inactiveClass = "flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all hover:bg-gray-50";
+
+            if (type === 'name') {
+                btnName.className = activeClass;
+                btnSurname.className = inactiveClass;
+                input.placeholder = "กรอกชื่อ (ไม่ต้องระบุคำนำหน้า)...";
+            } else {
+                btnSurname.className = activeClass;
+                btnName.className = inactiveClass;
+                input.placeholder = "กรอกนามสกุล...";
+            }
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูล', confirmButtonColor: '#4f46e5' });
+                return;
+            }
+
+            Swal.fire({
+                title: 'กำลังค้นหา...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                // ส่ง request ไปยัง Apps Script
+                const response = await fetch(`${SCRIPT_URL}?action=search&type=${currentSearchType}&query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                Swal.close();
+
+                if (data.status === 'success' && data.data && data.data.length > 0) {
+                    searchResults = data.data;
+                    if (searchResults.length === 1) {
+                        showResult(searchResults[0]);
+                    } else {
+                        showList(searchResults);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไม่พบข้อมูล',
+                        text: 'ไม่พบข้อมูลที่คุณค้นหา ลองตรวจสอบตัวสะกด หรือเปลี่ยนเงื่อนไขการค้นหา',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'เกิดข้อผิดพลาด', 
+                    text: 'ไม่สามารถเชื่อมต่อระบบได้ ตรวจสอบ URL Script หรือการตั้งค่า Deploy', 
+                    confirmButtonColor: '#ef4444' 
+                });
+            }
+        }
+
+        function showList(users) {
+            document.getElementById('searchSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('listSection').classList.remove('hidden');
+
+            document.getElementById('matchCount').textContent = users.length;
+            const container = document.getElementById('listContainer');
+            container.innerHTML = '';
+
+            users.forEach((user) => {
+                const item = document.createElement('div');
+                item.className = "bg-white p-3 rounded-lg border border-gray-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer flex justify-between items-center group";
+                item.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800 text-sm">${user.firstName} ${user.lastName}</p>
+                        <p class="text-xs text-gray-500">${user.email || '-'}</p>
+                    </div>
+                    <button type="button" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        เลือก
+                    </button>
+                `;
+                item.addEventListener('click', () => showResult(user));
+                container.appendChild(item);
+            });
+        }
+
+        function showResult(user) {
+            currentUserData = user;
+            
+            document.getElementById('searchSection').classList.add('hidden');
+            document.getElementById('listSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+
+            document.getElementById('resultName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('resultEmail').textContent = user.email || "-";
+
+            const container = document.getElementById('statusContainer');
+            container.innerHTML = '';
+
+            const flag = String(user.universityEmailFlag || "").trim().toUpperCase();
+
+            // เงื่อนไข 1: Col E ว่าง -> เสร็จสิ้น
+            if (!flag) {
+                container.innerHTML = `
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                        <div class="flex">
+                            <div class="flex-shrink-0"><i class="fas fa-check-circle text-green-500"></i></div>
+                            <div class="ml-3">
+                                <p class="text-sm text-green-700 font-bold">อีเมล์ของคุณเป็นอีเมล์มหาวิทยาลัยแล้ว</p>
+                                <p class="text-xs text-green-600 mt-1">ใช้: ${user.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="resetUI()" class="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">ปิด / ค้นหาใหม่</button>
+                `;
+            } 
+            // เงื่อนไข 2: Col E = Y -> ต้องกรอกข้อมูล
+            else if (flag === 'Y') {
+                container.innerHTML = `
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
+                        <p class="text-sm text-yellow-700 font-medium"><i class="fas fa-exclamation-triangle mr-1"></i> กรุณาระบุอีเมลมหาวิทยาลัย</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">อีเมลมหาวิทยาลัยใหม่</label>
+                            <input type="email" id="uniEmailInput" class="block w-full px-4 py-3 border border-gray-300 rounded-lg text-sm" placeholder="name.su@mail.wu.ac.th">
+                            <p class="text-xs text-red-400 mt-1">* ต้องลงท้ายด้วย @mail.wu.ac.th เท่านั้น</p>
+                        </div>
+                        <button onclick="submitEmail()" class="w-full py-3 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700">ส่งข้อมูล</button>
+                        <button onclick="backToListOrSearch()" class="w-full mt-2 text-gray-500 text-sm hover:underline">ยกเลิก</button>
+                    </div>
+                `;
+            } else {
+                 container.innerHTML = `<div class="p-4 text-center text-gray-500">สถานะข้อมูลไม่ถูกต้อง (${flag})</div><button onclick="resetUI()" class="w-full mt-2 bg-gray-200 py-2 rounded">กลับหน้าหลัก</button>`;
+            }
+        }
+
+        async function submitEmail() {
+            const emailInput = document.getElementById('uniEmailInput').value.trim();
+            if (!emailInput) return Swal.fire({ icon: 'warning', title: 'กรุณากรอกอีเมล', confirmButtonColor: '#f59e0b' });
+            if (!emailInput.endsWith('@mail.wu.ac.th')) return Swal.fire({ icon: 'error', title: 'อีเมลไม่ถูกต้อง', text: 'ต้องใช้ @mail.wu.ac.th เท่านั้น', confirmButtonColor: '#ef4444' });
+
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการบันทึก', text: `อีเมล: ${emailInput}`, icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'ยืนยัน'
+            });
+
+            if (confirm.isConfirmed) {
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'update');
+                    formData.append('rowIndex', currentUserData.rowIndex);
+                    formData.append('uniEmail', emailInput);
+                    const response = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (data.status === 'success') Swal.fire({ icon: 'success', title: 'สำเร็จ!', confirmButtonColor: '#10b981' }).then(resetUI);
+                    else throw new Error(data.message);
+                } catch (err) { Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: 'โปรดลองใหม่อีกครั้ง' }); }
+            }
+        }
+
+        function backToListOrSearch() { searchResults.length > 1 ? showList(searchResults) : resetUI(); }
+        function resetUI() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('listSection').classList.add('hidden');
+            document.getElementById('searchSection').classList.remove('hidden');
+            currentUserData = null; searchResults = [];
+        }
+    </script>
+</body>
+</html>
