@@ -45,11 +45,15 @@
 
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
         
-        <!-- Header -->
-        <div class="bg-indigo-600 p-5 text-center text-white relative flex-shrink-0">
-            <div class="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform rotate-45 scale-150"></div>
-            <h1 class="text-xl font-bold relative z-10">ตรวจสอบสิทธิ์</h1>
+        <!-- Header (แก้ไข: เพิ่ม overflow-hidden เพื่อไม่ให้ bg ล้นมาบังปุ่ม) -->
+        <div class="bg-indigo-600 p-5 text-center text-white relative flex-shrink-0 overflow-hidden">
+            <!-- Decorative Background -->
+            <div class="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform rotate-45 scale-150 pointer-events-none"></div>
+            
+            <h1 class="text-xl font-bold relative z-10">ตรวจสอบอีเมล์เพื่อออกเกียรติบัตร</h1>
             <p class="text-indigo-100 text-xs mt-1 relative z-10">ระบบตรวจสอบข้อมูลการออกเกียรติบัตร AI Toolkit</p>
+            <p class="text-indigo-100 text-xs mt-1 relative z-10">เฉพาะนักศึกษาที่เรียนแล้วและมีสิทธิ์ได้รับเกียรติบัตรเท่านั้น</p>
+
         </div>
 
         <!-- Content -->
@@ -59,17 +63,17 @@
             <div id="searchSection">
                 <div class="flex flex-col space-y-4">
                     <!-- Toggle Buttons -->
-                    <div class="flex rounded-lg bg-gray-100 p-1">
-                        <button type="button" id="btnName" class="flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all">
+                    <div class="flex rounded-lg bg-gray-100 p-1 relative z-10">
+                        <button type="button" id="btnName" class="flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all border border-gray-200 cursor-pointer select-none">
                             ค้นหาด้วยชื่อ
                         </button>
-                        <button type="button" id="btnSurname" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all">
+                        <button type="button" id="btnSurname" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all hover:bg-gray-50 cursor-pointer select-none">
                             ค้นหาด้วยนามสกุล
                         </button>
                     </div>
 
                     <!-- Input -->
-                    <div class="relative">
+                    <div class="relative z-0">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
@@ -80,7 +84,7 @@
 
                     <!-- Search Button -->
                     <button type="button" id="btnSearch" 
-                        class="w-full py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02]">
+                        class="w-full py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] cursor-pointer">
                         <i class="fas fa-paper-plane mr-2"></i> ค้นหาข้อมูล
                     </button>
                 </div>
@@ -90,7 +94,7 @@
             <div id="listSection" class="hidden space-y-4 animate-fade-in-up">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-gray-700 font-bold">พบข้อมูล <span id="matchCount" class="text-indigo-600">0</span> รายการ</h3>
-                    <button type="button" id="btnBackToList" class="text-xs text-gray-500 hover:text-indigo-600 underline">กลับไปค้นหา</button>
+                    <button type="button" id="btnBackToList" class="text-xs text-gray-500 hover:text-indigo-600 underline cursor-pointer">กลับไปค้นหา</button>
                 </div>
                 <div id="listContainer" class="space-y-2"></div>
             </div>
@@ -111,61 +115,59 @@
 
         <!-- Footer -->
         <div class="text-center py-3 bg-gray-50 text-xs text-gray-400 flex-shrink-0">
-            © 2024 AI Toolkit System. All rights reserved.
+            © 2025 CSPDWU AI Toolkit System. All rights reserved.
         </div>
     </div>
 
     <script>
         // --- Configuration ---
-        // *** อย่าลืมเปลี่ยน URL ตรงนี้เป็น URL ของ Script คุณ ***
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2xc118WjgqAgc8oTr0oTOpL0kNpP4THGZAWQ00-hsi3XuJ3TeTCmvtumDIoL3838OFQ/exec'; 
 
+        // Variables
         let currentSearchType = 'name';
         let currentUserData = null;
         let searchResults = [];
 
-        // --- Event Listeners (โหลดเมื่อหน้าเว็บพร้อม) ---
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // ปุ่มเลือกประเภทการค้นหา
-            document.getElementById('btnName').addEventListener('click', () => setSearchType('name'));
-            document.getElementById('btnSurname').addEventListener('click', () => setSearchType('surname'));
-            
-            // ปุ่มค้นหา
-            document.getElementById('btnSearch').addEventListener('click', performSearch);
-            
-            // ปุ่มกลับ
-            document.getElementById('btnBackToList').addEventListener('click', resetUI);
+        // Elements
+        const btnName = document.getElementById('btnName');
+        const btnSurname = document.getElementById('btnSurname');
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+        const btnBackToList = document.getElementById('btnBackToList');
 
-            // กด Enter ในช่องค้นหา
-            document.getElementById('searchInput').addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') performSearch();
-            });
+        // Styles
+        const activeClass = "flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all border border-gray-200 cursor-pointer select-none";
+        const inactiveClass = "flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all hover:bg-gray-50 cursor-pointer select-none";
+
+        // --- Event Listeners ---
+        btnName.onclick = function() { setSearchType('name'); };
+        btnSurname.onclick = function() { setSearchType('surname'); };
+        btnSearch.onclick = performSearch;
+        btnBackToList.onclick = resetUI;
+
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') performSearch();
         });
 
+        // Initialize
+        setSearchType('name');
+
+        // --- Functions ---
         function setSearchType(type) {
             currentSearchType = type;
-            const btnName = document.getElementById('btnName');
-            const btnSurname = document.getElementById('btnSurname');
-            const input = document.getElementById('searchInput');
-
-            // Class styles
-            const activeClass = "flex-1 py-2 text-sm font-medium rounded-md bg-white text-indigo-600 shadow-sm transition-all border border-gray-200";
-            const inactiveClass = "flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-indigo-600 transition-all hover:bg-gray-50";
-
             if (type === 'name') {
                 btnName.className = activeClass;
                 btnSurname.className = inactiveClass;
-                input.placeholder = "กรอกชื่อ (ไม่ต้องระบุคำนำหน้า)...";
+                searchInput.placeholder = "กรอกชื่อ (ไม่ต้องระบุคำนำหน้า)...";
             } else {
                 btnSurname.className = activeClass;
                 btnName.className = inactiveClass;
-                input.placeholder = "กรอกนามสกุล...";
+                searchInput.placeholder = "กรอกนามสกุล...";
             }
         }
 
         async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
+            const query = searchInput.value.trim();
             
             if (!query) {
                 Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูล', confirmButtonColor: '#4f46e5' });
@@ -180,7 +182,6 @@
             });
 
             try {
-                // ส่ง request ไปยัง Apps Script
                 const response = await fetch(`${SCRIPT_URL}?action=search&type=${currentSearchType}&query=${encodeURIComponent(query)}`);
                 const data = await response.json();
                 
@@ -206,7 +207,7 @@
                 Swal.fire({ 
                     icon: 'error', 
                     title: 'เกิดข้อผิดพลาด', 
-                    text: 'ไม่สามารถเชื่อมต่อระบบได้ ตรวจสอบ URL Script หรือการตั้งค่า Deploy', 
+                    text: 'ไม่สามารถเชื่อมต่อระบบได้ ตรวจสอบ URL Script หรืออินเทอร์เน็ตของคุณ', 
                     confirmButtonColor: '#ef4444' 
                 });
             }
@@ -233,7 +234,7 @@
                         เลือก
                     </button>
                 `;
-                item.addEventListener('click', () => showResult(user));
+                item.onclick = function() { showResult(user); };
                 container.appendChild(item);
             });
         }
@@ -315,12 +316,14 @@
         }
 
         function backToListOrSearch() { searchResults.length > 1 ? showList(searchResults) : resetUI(); }
+        
         function resetUI() {
-            document.getElementById('searchInput').value = '';
+            searchInput.value = '';
             document.getElementById('resultSection').classList.add('hidden');
             document.getElementById('listSection').classList.add('hidden');
             document.getElementById('searchSection').classList.remove('hidden');
-            currentUserData = null; searchResults = [];
+            currentUserData = null; 
+            searchResults = [];
         }
     </script>
 </body>
