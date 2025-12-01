@@ -45,15 +45,11 @@
 
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
         
-        <!-- Header (แก้ไข: เพิ่ม overflow-hidden เพื่อไม่ให้ bg ล้นมาบังปุ่ม) -->
+        <!-- Header -->
         <div class="bg-indigo-600 p-5 text-center text-white relative flex-shrink-0 overflow-hidden">
-            <!-- Decorative Background -->
             <div class="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform rotate-45 scale-150 pointer-events-none"></div>
-            
-            <h1 class="text-xl font-bold relative z-10">ตรวจสอบอีเมล์เพื่อออกเกียรติบัตร</h1>
+            <h1 class="text-xl font-bold relative z-10">ตรวจสอบสิทธิ์</h1>
             <p class="text-indigo-100 text-xs mt-1 relative z-10">ระบบตรวจสอบข้อมูลการออกเกียรติบัตร AI Toolkit</p>
-            <p class="text-indigo-100 text-xs mt-1 relative z-10">เฉพาะนักศึกษาที่เรียนแล้วและมีสิทธิ์ได้รับเกียรติบัตรเท่านั้น</p>
-
         </div>
 
         <!-- Content -->
@@ -106,7 +102,7 @@
                         <i class="fas fa-user text-2xl"></i>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900" id="resultName"></h3>
-                    <p class="text-sm text-gray-500" id="resultEmail"></p>
+                    <p class="text-sm text-gray-500" id="resultEmailDisplay"></p>
                 </div>
                 <div id="statusContainer"></div>
             </div>
@@ -115,12 +111,13 @@
 
         <!-- Footer -->
         <div class="text-center py-3 bg-gray-50 text-xs text-gray-400 flex-shrink-0">
-            © 2025 CSPDWU AI Toolkit System. All rights reserved.
+            © 2024 AI Toolkit System. All rights reserved.
         </div>
     </div>
 
     <script>
         // --- Configuration ---
+        // *** อย่าลืมเปลี่ยน URL ตรงนี้เป็น URL ของ Script คุณ (ถ้ามีการ Deploy ใหม่) ***
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2xc118WjgqAgc8oTr0oTOpL0kNpP4THGZAWQ00-hsi3XuJ3TeTCmvtumDIoL3838OFQ/exec'; 
 
         // Variables
@@ -247,15 +244,34 @@
             document.getElementById('resultSection').classList.remove('hidden');
 
             document.getElementById('resultName').textContent = `${user.firstName} ${user.lastName}`;
-            document.getElementById('resultEmail').textContent = user.email || "-";
+            
+            // แสดงอีเมล (ถ้ามี updatedEmail ให้ใช้ updatedEmail, ถ้าไม่มีให้ใช้ email เดิม)
+            const updatedEmail = user.updatedEmail ? String(user.updatedEmail).trim() : "";
+            const displayEmail = updatedEmail || user.email || "-";
+            document.getElementById('resultEmailDisplay').textContent = displayEmail;
 
             const container = document.getElementById('statusContainer');
             container.innerHTML = '';
 
             const flag = String(user.universityEmailFlag || "").trim().toUpperCase();
 
-            // เงื่อนไข 1: Col E ว่าง -> เสร็จสิ้น
-            if (!flag) {
+            // *** เพิ่มเงื่อนไขพิเศษ: ถ้ามี updatedEmail (Col F) ให้ถือว่าสำเร็จทันที ***
+            if (updatedEmail) {
+                container.innerHTML = `
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                        <div class="flex">
+                            <div class="flex-shrink-0"><i class="fas fa-user-edit text-blue-500"></i></div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700 font-bold">คุณได้ทำการแก้ไขอีเมลมหาวิทยาลัยแล้ว</p>
+                                <p class="text-xs text-blue-600 mt-1">อีเมลปัจจุบัน: ${updatedEmail}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="resetUI()" class="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">ปิด / ค้นหาใหม่</button>
+                `;
+            }
+            // เงื่อนไขเดิม: Col E ว่าง -> เสร็จสิ้น (ใช้ Email เดิม)
+            else if (!flag) {
                 container.innerHTML = `
                     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
                         <div class="flex">
@@ -269,7 +285,7 @@
                     <button onclick="resetUI()" class="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">ปิด / ค้นหาใหม่</button>
                 `;
             } 
-            // เงื่อนไข 2: Col E = Y -> ต้องกรอกข้อมูล
+            // เงื่อนไขเดิม: Col E = Y -> ต้องกรอกข้อมูล
             else if (flag === 'Y') {
                 container.innerHTML = `
                     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
